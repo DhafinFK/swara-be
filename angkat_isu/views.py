@@ -54,6 +54,32 @@ class AngkatIsuAPI(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 
+class PostImageView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsOwner]
+    parser_classes = (FormParser, MultiPartParser)
+
+    def post(self, request, post_id):
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return Response({
+                "Message": "Post Tidak Ditemukan"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        self.check_object_permissions(request, post)
+
+        images = request.FILES.getlist('images')
+
+        for image in images:
+            post_image = PostImage.objects.create(post=post, image=image)
+
+        return Response({
+            "Message": "Berhasil Upload Gambar"
+        }, status=status.HTTP_201_CREATED)
+
+
 class PostDetail(APIView):
     parser_classes = [JSONParser]
         
@@ -71,7 +97,6 @@ class PostDetail(APIView):
             return Response({
                 "Message": "Isu tidak ditemukan"
             })
-      
         
 
 class LikeUnlikeAPI(APIView):

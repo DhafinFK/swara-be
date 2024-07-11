@@ -3,6 +3,10 @@ from authorization.models import User
 from core.models import UUIDBaseModel
 
 
+def upload_to_path(instance, filename):
+    return f'images/{instance.post.id}/{filename}'
+
+
 class Post(UUIDBaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField(max_length=3000)
@@ -22,6 +26,15 @@ class Post(UUIDBaseModel):
 
     def __str__(self):
         return self.title
+    
+
+class PostImage(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=upload_to_path)
+
+    def delete(self, *args, **kwargs):
+        self.image.delete()
+        super(PostImage, self).delete(*args, **kwargs)
     
 
 class Like(UUIDBaseModel):
