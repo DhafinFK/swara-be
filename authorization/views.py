@@ -30,7 +30,7 @@ class SignupView(APIView):
         if role == 'law_expert':
             serializer = LawExpertSignUpSerializer(data=data)
             if serializer.is_valid():
-                user = serializer.save()
+                serializer.save()
                 return Response({
                     "Message": "Request verifikasi ahli hukum telah dibuat"
                 })

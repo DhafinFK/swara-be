@@ -18,6 +18,19 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('FullName', 'Email', 'Password', 'SignUpType', 'Certificate')
 
+
+    def validate(self, data):
+
+        role = data.get('role')
+        certificate = data.get('law_certificate', None)
+
+        if role == 'law_expert' and not certificate:
+            raise serializers.ValidationError("Ahli hukum harus menyertakan sertifikat!")
+        if role == 'regular_user' and certificate:
+            raise serializers.ValidationError("Pengguna biasa tidak boleh upload sertifikat!")
+
+        return data
+
     def validate_Email(self, value):
         email = value
         if User.objects.filter(email=email).exists():
@@ -39,7 +52,7 @@ class LawExpertSignUpSerializer(serializers.ModelSerializer):
     FullName = serializers.CharField(source='full_name', required=True)
     Email = serializers.EmailField(source='email', required=True)
     Password = serializers.CharField(source='password', write_only=True, required=True)
-    Certificate = serializers.URLField(source='lawyer_certificate', required=False, allow_blank=False, allow_null=True)
+    Certificate = serializers.URLField(source='law_certificate')
 
     class Meta:
         model = LawExpertSignUp

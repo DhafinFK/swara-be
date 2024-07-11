@@ -60,9 +60,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['full_name']
 
     def clean(self):
-        if self.role == 'lawyer' and not self.lawyer_certificate:
+        if self.role == 'law_expert' and not self.law_certificate:
             raise ValidationError('Lawyers must upload certification')
-        if self.role == 'regular_user' and self.lawyer_certificate:
+        if self.role == 'regular_user' and self.law_certificate:
             raise ValidationError('Regular users canot include certification')
     
     def save(self, *args, **kwargs):

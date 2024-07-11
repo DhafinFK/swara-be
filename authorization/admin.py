@@ -17,15 +17,13 @@ class LawExpertSignup(admin.ModelAdmin):
                 continue
             
             print("creating user")
-            user = User.objects.create(
+            User.objects.create(
                 email=signup.email,
                 full_name=signup.full_name,
                 password=signup.password,
                 role='law_expert',
                 law_certificate=signup.law_certificate
             )
-
-            user.save()
             
             signup.is_approved = True
             signup.save()
