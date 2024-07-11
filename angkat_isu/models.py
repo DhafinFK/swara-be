@@ -24,5 +24,18 @@ class Post(UUIDBaseModel):
         return self.title
     
 
+class Like(UUIDBaseModel):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta(UUIDBaseModel.Meta):
+        unique_together = (("post", "user"),)
+    
+
+class Comment(UUIDBaseModel):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    reply_comment = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)
+    text = models.TextField(max_length=200)
 
 
