@@ -59,4 +59,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name']
 
+    def clean(self):
+        if self.role == 'lawyer' and not self.lawyer_certificate:
+            raise ValidationError('Lawyers must upload certification')
+        if self.role == 'regular_user' and self.lawyer_certificate:
+            raise ValidationError('Regular users canot include certification')
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
+
+
+class LawExpertSignUp(UUIDBaseModel):
+    email = models.EmailField(unique=True)
+    full_name = models.CharField(max_length=200)
+    password = models.CharField(max_length=120)
+    law_certificate = models.URLField(max_length=100)
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'Lawyer verification request for {self.email}'

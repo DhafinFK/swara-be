@@ -1,12 +1,11 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
-from .serializers import UserSerializer
+from .serializers import *
 
 
 def get_tokens_for_user(user):
@@ -17,14 +16,28 @@ def get_tokens_for_user(user):
     }
 
 
-class SignupView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+class SignupView(APIView):
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         data = request.data
+        role = data.get('SignUpType', None)
 
-        serializer = self.serializer_class(data=data)
+        if not role:
+            return Response({
+                "Message": "SignUp harus menyertakan tipe signup"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if role == 'law_expert':
+            serializer = LawExpertSignUpSerializer(data=data)
+            if serializer.is_valid():
+                user = serializer.save()
+                return Response({
+                    "Message": "Request verifikasi ahli hukum telah dibuat"
+                })
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UserSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
