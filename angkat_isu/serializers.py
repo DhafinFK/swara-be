@@ -2,6 +2,14 @@ from rest_framework import serializers
 from .models import *
 
 
+class PostImageSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(use_url=True)
+    
+    class Meta:
+        model = PostImage
+        fields = ('image',)
+
+
 class PostSerializer(serializers.ModelSerializer):
     UserId  = serializers.PrimaryKeyRelatedField(source='user', queryset=User.objects, many=False)
     
@@ -11,12 +19,13 @@ class PostSerializer(serializers.ModelSerializer):
     Votes = serializers.IntegerField(source='like_count', read_only=True)
 
     UserName = serializers.SerializerMethodField(method_name='get_user_name', read_only=True)
+    Images = serializers.SerializerMethodField(method_name="get_post_images", read_only=True)
     LikedByUser = serializers.SerializerMethodField(method_name='get_like_flag')    
     Comments = serializers.SerializerMethodField(method_name='get_first_layer_comments')
 
     class Meta:
         model = Post
-        fields = ('UserId', 'PostId', 'UserName', 'Title', 'Text', 'Votes', 'LikedByUser', 'Comments')
+        fields = ('UserId', 'PostId', 'UserName', 'Title', 'Text', 'Images', 'Votes', 'LikedByUser', 'Comments')
 
     
     def get_like_flag(self, obj):
@@ -42,6 +51,12 @@ class PostSerializer(serializers.ModelSerializer):
     def get_user_name(self, obj):
         return obj.user.full_name.split()[0]
     
+    
+    def get_post_images(self, obj):
+        images = obj.postimage_set.all()
+        serializer = PostImageSerializer(images, many=True, context=self.context)
+
+        return serializer.data
 
 class LikeSerializer(serializers.ModelSerializer):
     UserId = serializers.PrimaryKeyRelatedField(source="user", queryset=User.objects, many=False, write_only=True)
