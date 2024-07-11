@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from .models import *
 from .serializers import *
+from .permissions import *
 
 
 class AngkatIsuAPI(APIView):
@@ -24,7 +25,7 @@ class AngkatIsuAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
-        self.permission_classes = [IsAuthenticated]
+        self.permission_classes = [IsAuthenticated, IsOwner]
 
         try:
             post_id = request.data.get("PostId")
