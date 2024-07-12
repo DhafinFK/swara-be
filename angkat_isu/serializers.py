@@ -17,15 +17,17 @@ class PostSerializer(serializers.ModelSerializer):
     Title = serializers.CharField(source='title', max_length=80)
     Text = serializers.CharField(source='text', max_length=3000) 
     Votes = serializers.IntegerField(source='like_count', read_only=True)
+    Status = serializers.CharField(source='status', read_only=True)
 
     UserName = serializers.SerializerMethodField(method_name='get_user_name', read_only=True)
     Images = serializers.SerializerMethodField(method_name="get_post_images", read_only=True)
-    LikedByUser = serializers.SerializerMethodField(method_name='get_like_flag')    
-    Comments = serializers.SerializerMethodField(method_name='get_first_layer_comments')
+    LikedByUser = serializers.SerializerMethodField(method_name='get_like_flag', read_only=True)    
+    Comments = serializers.SerializerMethodField(method_name='get_first_layer_comments', read_only=True)
+    IsOwner = serializers.SerializerMethodField(method_name='get_is_owner', read_only=True)
 
     class Meta:
         model = Post
-        fields = ('UserId', 'PostId', 'UserName', 'Title', 'Text', 'Images', 'Votes', 'LikedByUser', 'Comments')
+        fields = ('UserId', 'PostId', 'UserName', 'Title', 'Text', 'Images', 'Votes', 'LikedByUser', 'Comments', 'IsOwner', 'Status')
 
     
     def get_like_flag(self, obj):
@@ -57,6 +59,12 @@ class PostSerializer(serializers.ModelSerializer):
         serializer = PostImageSerializer(images, many=True, context=self.context)
 
         return serializer.data
+    
+    def get_is_owner(self, obj):
+        request = self.context.get('request', None)
+        if request.user:
+            return request.user == obj.user
+        return False
 
 class LikeSerializer(serializers.ModelSerializer):
     UserId = serializers.PrimaryKeyRelatedField(source="user", queryset=User.objects, many=False, write_only=True)
@@ -71,13 +79,15 @@ class CommentSerializer(serializers.ModelSerializer):
     UserId = serializers.PrimaryKeyRelatedField(source="user", queryset=User.objects, many=False, write_only=True)
     PostId = serializers.PrimaryKeyRelatedField(source="post", queryset=Post.objects, many=False)
     CommentId = serializers.PrimaryKeyRelatedField(source="reply_comment", queryset=Comment.objects, required=False, many=False)
-    UserName = serializers.SerializerMethodField(method_name='get_user_name', read_only=True)
     Comment = serializers.CharField(source="text")
     HasReply = serializers.SerializerMethodField(read_only=True, method_name="get_has_reply")
+    UserName = serializers.SerializerMethodField(method_name='get_user_name', read_only=True)
+    UserRole = serializers.SerializerMethodField(method_name='get_role', read_only=True)
+    
 
     class Meta:
         model = Comment
-        fields = ('id', 'UserId', 'PostId', 'CommentId', 'UserName', 'Comment', 'HasReply')
+        fields = ('id', 'UserId', 'PostId', 'CommentId', 'UserName', 'UserRole', 'Comment', 'HasReply')
 
 
     def validate_CommentId(self, value):
@@ -96,3 +106,6 @@ class CommentSerializer(serializers.ModelSerializer):
     
     def get_has_reply(self, obj):
         return Comment.objects.filter(reply_comment=obj).exists()
+    
+    def get_role(self, obj):
+        return obj.user.role
