@@ -117,6 +117,7 @@ class GoogleLogin(APIView):
 
             return Response({
                 'message': 'User authenticated successfully.',
+                'FirstName': user.full_name.split()[0],
                 'tokens': tokens['access']
             }, status=status.HTTP_200_OK)
         
