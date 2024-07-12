@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from rest_framework import status
 from rest_framework.response import Response
@@ -6,12 +5,11 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import *
-from social_django.utils import load_strategy, load_backend
-from social_core.exceptions import AuthException
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from django.conf import settings
-import logging
+
+
 User = get_user_model()
 
 
@@ -83,7 +81,6 @@ class LoginView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class GoogleLogin(APIView):
     def post(self, request):
         credential = request.data.get('credential')
@@ -122,8 +119,7 @@ class GoogleLogin(APIView):
                 'message': 'User authenticated successfully.',
                 'tokens': tokens['access']
             }, status=status.HTTP_200_OK)
-
-            return Response({'message': 'User authenticated successfully.'}, status=status.HTTP_200_OK)
+        
 
         except ValueError as e:
             # Invalid token
