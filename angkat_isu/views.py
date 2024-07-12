@@ -15,7 +15,6 @@ class AngkatIsuAPI(APIView):
 
     parser_classes = [JSONParser]
 
-    # TODO: implement filtering
     def get(self, request):
         sortby = request.query_params.get('sortby', None)
 
@@ -85,7 +84,7 @@ class PostImageView(APIView):
         images = request.FILES.getlist('images')
 
         for image in images:
-            post_image = PostImage.objects.create(post=post, image=image)
+            PostImage.objects.create(post=post, image=image)
 
         return Response({
             "Message": "Berhasil Upload Gambar"

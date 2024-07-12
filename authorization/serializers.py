@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
     Email = serializers.EmailField(source='email', required=True)
     Password = serializers.CharField(source='password', write_only=True, required=True)
     SignUpType = serializers.ChoiceField(choices=User.ROLE_CHOICES, source='role', required=True)
-    Certificate = serializers.URLField(source='lawyer_certificate', required=False, allow_blank=False, allow_null=True)
+    Certificate = serializers.URLField(source='law_certificate', required=False, allow_blank=False, allow_null=True)
 
     class Meta:
         model = User

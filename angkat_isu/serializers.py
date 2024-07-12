@@ -43,10 +43,7 @@ class PostSerializer(serializers.ModelSerializer):
         if not comments.exists():
             return None
 
-        if not type_detail:
-            serializer = CommentSerializer(comments[0])
-        else:
-            serializer = CommentSerializer(comments, many=True)
+        serializer = CommentSerializer(comments, many=True)
         
         return serializer.data
 
@@ -62,7 +59,7 @@ class PostSerializer(serializers.ModelSerializer):
     
     def get_is_owner(self, obj):
         request = self.context.get('request', None)
-        if request.user:
+        if request:
             return request.user == obj.user
         return False
 
@@ -83,11 +80,12 @@ class CommentSerializer(serializers.ModelSerializer):
     HasReply = serializers.SerializerMethodField(read_only=True, method_name="get_has_reply")
     UserName = serializers.SerializerMethodField(method_name='get_user_name', read_only=True)
     UserRole = serializers.SerializerMethodField(method_name='get_role', read_only=True)
+    UserEmail = serializers.SerializerMethodField(method_name='get_user_email', read_only=True)
     
 
     class Meta:
         model = Comment
-        fields = ('id', 'UserId', 'PostId', 'CommentId', 'UserName', 'UserRole', 'Comment', 'HasReply')
+        fields = ('id', 'UserId', 'PostId', 'CommentId', 'UserName', 'UserEmail', 'UserRole', 'Comment', 'HasReply')
 
 
     def validate_CommentId(self, value):
@@ -109,3 +107,6 @@ class CommentSerializer(serializers.ModelSerializer):
     
     def get_role(self, obj):
         return obj.user.role
+    
+    def get_user_email(self, obj):
+        return obj.user.email

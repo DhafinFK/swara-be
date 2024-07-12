@@ -38,7 +38,7 @@ class SignupView(APIView):
                 serializer.save()
                 return Response({
                     "Message": "Request verifikasi ahli hukum telah dibuat"
-                })
+                }, status=status.HTTP_201_CREATED)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
