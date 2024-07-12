@@ -1,0 +1,1 @@
+web: gunicorn swara_be.wsgi
