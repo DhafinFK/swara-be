@@ -15,15 +15,27 @@ class AngkatIsuAPI(APIView):
 
     parser_classes = [JSONParser]
 
+    # TODO: implement filtering
     def get(self, request):
-        top_posts = Post.objects.all().order_by("-like_count")[:4]  
+        sortby = request.query_params.get('sortby', None)
+
+        if sortby == 'pengguna':
+            if request.user.is_anonymous:
+                posts = []
+            else:
+                posts = Post.objects.filter(user=request.user)
+        elif sortby == 'terbaru':
+            posts = Post.objects.all().order_by("-created")[:4]
+        else:  
+            posts = Post.objects.all().order_by("-like_count")[:4]  
+
 
         context = {
             'request': request,
             'get_detail': False
         }
 
-        serializer = PostSerializer(top_posts, many=True, context=context)
+        serializer = PostSerializer(posts, many=True, context=context)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
