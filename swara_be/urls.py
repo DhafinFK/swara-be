@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('auth/google/', include('drf_social_oauth2.urls', namespace='drf')),
     path('auth/', include('authorization.urls')),
     path('angkat-isu/', include('angkat_isu.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

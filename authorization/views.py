@@ -6,6 +6,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import *
+from social_django.utils import load_strategy, load_backend
+from social_core.exceptions import AuthException
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from django.conf import settings
+import logging
+User = get_user_model()
 
 
 def get_tokens_for_user(user):
@@ -42,7 +49,7 @@ class SignupView(APIView):
             user = serializer.save()
             if user:
                 firstname = user.full_name.split()[0]
-                login(request, user)
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 token = get_tokens_for_user(user)
                 return Response({
                     "FirstName": firstname,
@@ -62,7 +69,7 @@ class LoginView(APIView):
         user = authenticate(request, email=email, password=password)
         if user:
             firstname = user.full_name.split()[0]
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             token = get_tokens_for_user(user)
             return Response({
                 "FirstName": firstname,
@@ -75,3 +82,52 @@ class LoginView(APIView):
             "message": "Email atau password salah!"
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+class GoogleLogin(APIView):
+    def post(self, request):
+        credential = request.data.get('credential')
+        
+        try:
+            # Verify the token
+            idinfo = id_token.verify_oauth2_token(credential, google_requests.Request(), settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY)
+            
+            # Check if the token is issued to your client ID
+            if idinfo['aud'] != settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
+                raise ValueError('Could not verify audience.')
+
+            # Get user info
+            email = idinfo['email']
+            full_name = idinfo.get('name')
+            google_id = idinfo['sub']
+
+            # Find or create user
+            user, created = User.objects.get_or_create(
+                email=email,
+                defaults={
+                    'full_name': full_name,
+                }
+            )
+
+            if created:
+                user.set_unusable_password()  # or set a default password if required
+                user.save()
+
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+            # Get tokens for the user
+            tokens = get_tokens_for_user(user)
+
+            return Response({
+                'message': 'User authenticated successfully.',
+                'tokens': tokens['access']
+            }, status=status.HTTP_200_OK)
+
+            return Response({'message': 'User authenticated successfully.'}, status=status.HTTP_200_OK)
+
+        except ValueError as e:
+            # Invalid token
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # Other unexpected errors
+            return Response({'error': 'An error occurred while authenticating.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
